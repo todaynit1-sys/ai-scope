@@ -14,8 +14,7 @@ No generated marketing graphic represents measured model performance.
 components/ad-slot.tsx has two placements outside the chart and controls:
 after-summary (after ranking cards, before the data table), and before-footer.
 Neither appears in lecture capture, history or methodology.
-Empty placements show a quiet ad label and reserve 90px desktop / 100px mobile
-plus 22px label. No ad provider, tracking code or network request is enabled.
+Empty placements contain no text or label and reserve 90px desktop / 100px mobile. No ad provider, tracking code or network request is enabled.
 Pass approved React ad content as children when connecting a provider.
 Use a responsive unit within the reserved container; for example 728x90 on desktop
 and 320x100 on mobile. Keep the label visible; avoid expanding beyond the reserved

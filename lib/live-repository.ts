@@ -2,6 +2,7 @@ import 'server-only';
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { collectLiveData } from './sources/live-collector.mjs';
+import { REFERENCE_DATE } from './sources/public-reference.mjs';
 import { preserveFailedSources } from './sources/live-fallback.mjs';
 import type { LiveSnapshot } from './live-types';
 // Route handlers and RSC pages can compile this module into separate bundles.
@@ -12,7 +13,7 @@ const mode = () => process.env.DATA_MODE === 'public' ? 'public' : 'internal';
 function publicFilter(snapshot: LiveSnapshot): LiveSnapshot {
   if(mode()==='internal') return snapshot;
   const allow=process.env.AA_REDISTRIBUTION_ALLOWED==='true';
-  return {...snapshot,mode:'public',models:snapshot.models.filter(m=>allow||m.source!=='artificial-analysis'),sources:snapshot.sources.map(s=>!allow&&s.source==='artificial-analysis'?{...s,state:'restricted',count:0,message:'별도 공식 API 미연결 · 성능은 OpenRouter 공개 목록 기준입니다.'}:s)};
+  return {...snapshot,mode:'public',models:snapshot.models.filter(m=>allow||m.source!=='artificial-analysis'),sources:snapshot.sources.map(s=>!allow&&s.source==='artificial-analysis'?{...s,state:'restricted',count:0,message:'별도 공식 API 미연결'}:s)};
 }
 export async function getLiveHistory(): Promise<LiveSnapshot[]> {
   try {
@@ -29,7 +30,8 @@ export async function getLiveSnapshot(refresh=false): Promise<LiveSnapshot> {
     let saved: LiveSnapshot | null=null;
     try { const body=JSON.parse(await readFile(path.join(process.cwd(),'data/latest.json'),'utf8'));if(body.schemaVersion===1&&Array.isArray(body.models))saved=publicFilter(body); } catch {}
     const keyAdded=!!process.env.ARTIFICIAL_ANALYSIS_API_KEY&&saved?.sources.some(s=>s.source==='artificial-analysis'&&s.state==='missing-key');
-    if(!refresh&&!keyAdded&&saved&&Date.now()-Date.parse(saved.capturedAt)<6*60*60*1000) {cache.snapshot=saved;cache.expiresAt=Date.parse(saved.capturedAt)+6*60*60*1000;return saved;}
+    const currentReference=saved?.models.some(m=>m.source==='public-reference'&&m.capturedAt===REFERENCE_DATE);
+    if(!refresh&&!keyAdded&&currentReference&&saved&&Date.now()-Date.parse(saved.capturedAt)<6*60*60*1000) {cache.snapshot=saved;cache.expiresAt=Date.parse(saved.capturedAt)+6*60*60*1000;return saved;}
     const current=await collectLiveData({apiKey:process.env.ARTIFICIAL_ANALYSIS_API_KEY||'',mode:mode(),redistributionAllowed:process.env.AA_REDISTRIBUTION_ALLOWED==='true'}) as LiveSnapshot;
     const previous=cache.snapshot&&(!saved||cache.snapshot.capturedAt>=saved.capturedAt)?cache.snapshot:saved;
     const failed=current.sources.some(s=>s.state==='error');
