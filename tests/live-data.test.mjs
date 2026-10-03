@@ -3,6 +3,22 @@ import assert from 'node:assert/strict';
 import { numberOrNull, parseOpenRouter, parseArtificialAnalysis } from '../lib/sources/live-parsers.mjs';
 import { collectLiveData, AA_URL } from '../lib/sources/live-collector.mjs';
 import { preserveFailedSources } from '../lib/sources/live-fallback.mjs';
+import { DEFAULT_EFFORTS, defaultFamilies, filterEfforts } from '../lib/live-selection.mjs';
+
+test('requested defaults use latest regular Astra, Sol, Fable, Opus and Grok, even without a score',()=>{
+  const row=(name,creator,date)=>({name,creator,catalogDate:date,familyId:name,intelligence:null});
+  const rows=[row('GPT-6 Sol','OpenAI','2026-08-01'),row('GPT-6.1 Sol','OpenAI','2026-10-01'),row('GPT-6.1 Sol Pro','OpenAI','2026-10-02'),row('GPT-6 Astra','OpenAI','2026-09-01'),row('Claude Fable 5.1','Anthropic','2026-10-01'),row('Claude Opus 5.5','Anthropic','2026-10-01'),row('Claude Sonnet 5.5','Anthropic','2026-10-02'),row('Grok 4.20','xAI','2026-08-01'),row('Grok 4.7','xAI','2026-10-01'),row('Grok 4.20 Multi-Agent','xAI','2026-10-02')];
+  assert.deepEqual(defaultFamilies(rows),['GPT-6 Astra','GPT-6.1 Sol','Claude Fable 5.1','Claude Opus 5.5','Grok 4.7']);
+  assert.deepEqual(defaultFamilies([]),[]);
+});
+
+test('effort checkboxes filter explicit measurements without multiplying unknown scores',()=>{
+  const rows=['low','medium','high','xhigh','max',null].map(benchmarkEffort=>({benchmarkEffort}));
+  assert.deepEqual(DEFAULT_EFFORTS,['medium','high','xhigh']);
+  assert.deepEqual(filterEfforts(rows,DEFAULT_EFFORTS).map(m=>m.benchmarkEffort),['medium','high','xhigh',null]);
+  assert.deepEqual(filterEfforts(rows,[]),[]);
+  assert.deepEqual(filterEfforts(rows,['high']).map(m=>m.benchmarkEffort),['high',null]);
+});
 test('failed refresh retains prior rows with original timestamps without duplicating healthy sources',()=>{
   const old={models:[{id:'old',source:'openrouter',capturedAt:'old-time'},{id:'old-aa',source:'artificial-analysis'}]};
   const current={models:[{id:'new-aa',source:'artificial-analysis'}],sources:[{source:'openrouter',state:'error'},{source:'artificial-analysis',state:'connected'}]};
