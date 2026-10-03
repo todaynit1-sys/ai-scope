@@ -6,18 +6,18 @@ import { preserveFailedSources } from '../lib/sources/live-fallback.mjs';
 import { DEFAULT_EFFORTS, defaultFamilies, filterEfforts } from '../lib/live-selection.mjs';
 import { publicReferenceModels, REFERENCE_DATE } from '../lib/sources/public-reference.mjs';
 
-test('verified reference defaults render 14 distinct measured settings, never synthesize Grok medium',async()=>{
+test('verified reference defaults render 19 distinct measured settings, never synthesize Grok medium',async()=>{
   const rows=publicReferenceModels();
   assert.equal(rows.length,23);
   assert.equal(new Set(rows.map(m=>m.id)).size,23);
   const selected=defaultFamilies(rows);
   assert.equal(selected.length,5);
   const points=filterEfforts(rows.filter(m=>selected.includes(m.familyId)),DEFAULT_EFFORTS);
-  assert.equal(points.length,14);
-  assert.equal(points.filter(m=>m.creator==='xAI').length,2);
+  assert.equal(points.length,19);
+  assert.equal(points.filter(m=>m.creator==='xAI').length,3);
   assert.ok(points.every(m=>m.intelligence!==null&&m.costPerTask!==null&&m.benchmarkEffort&&m.benchmarkVersion==='AA v4.3.2'));
   assert.ok(rows.every(m=>m.capturedAt===REFERENCE_DATE&&m.source==='public-reference'&&m.sourceUrl.startsWith('https://artificialanalysis.ai/models/releases/')));
-  assert.deepEqual(points.filter(m=>m.name==='GPT-6.1 Sol').map(m=>[m.benchmarkEffort,m.intelligence,m.costPerTask]),[['medium',48,0.21],['high',50,0.32],['xhigh',51,0.39]]);
+  assert.deepEqual(points.filter(m=>m.name==='GPT-6.1 Sol').map(m=>[m.benchmarkEffort,m.intelligence,m.costPerTask]),[['low',42,0.13],['medium',48,0.21],['high',50,0.32],['xhigh',51,0.39]]);
   const snapshot=await collectLiveData({mode:'public',fetcher:async()=>({ok:false,status:503})});
   assert.equal(snapshot.models.length,23);
   assert.equal(snapshot.sources.find(s=>s.source==='public-reference').state,'connected');
@@ -32,8 +32,8 @@ test('requested defaults use latest regular Astra, Sol, Fable, Opus and Grok, ev
 
 test('effort checkboxes filter explicit measurements without multiplying unknown scores',()=>{
   const rows=['low','medium','high','xhigh','max',null].map(benchmarkEffort=>({benchmarkEffort}));
-  assert.deepEqual(DEFAULT_EFFORTS,['medium','high','xhigh']);
-  assert.deepEqual(filterEfforts(rows,DEFAULT_EFFORTS).map(m=>m.benchmarkEffort),['medium','high','xhigh',null]);
+  assert.deepEqual(DEFAULT_EFFORTS,['low','medium','high','xhigh']);
+  assert.deepEqual(filterEfforts(rows,DEFAULT_EFFORTS).map(m=>m.benchmarkEffort),['low','medium','high','xhigh',null]);
   assert.deepEqual(filterEfforts(rows,[]),[]);
   assert.deepEqual(filterEfforts(rows,['high']).map(m=>m.benchmarkEffort),['high',null]);
 });

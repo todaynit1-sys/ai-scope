@@ -17,6 +17,6 @@ Unverified metrics remain null. Grok has no published Medium row in this summary
 - [Claude Opus 5.5](https://artificialanalysis.ai/models/releases/claude-opus-5-5)
 - [Grok 4.7](https://artificialanalysis.ai/models/releases/grok-4-7)
 
-23 measurements total; the default Medium/High/XHigh filter selects 14.
+23 measurements total; the default Low/Medium/High/XHigh filter selects 19.
 The separate authenticated AA API remains subject to its configured key and
 public redistribution settings. This summary does not enable API redistribution.
