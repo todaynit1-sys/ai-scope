@@ -2,6 +2,17 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { numberOrNull, parseOpenRouter, parseArtificialAnalysis } from '../lib/sources/live-parsers.mjs';
 import { collectLiveData, AA_URL } from '../lib/sources/live-collector.mjs';
+import { preserveFailedSources } from '../lib/sources/live-fallback.mjs';
+test('failed refresh retains prior rows with original timestamps without duplicating healthy sources',()=>{
+  const old={models:[{id:'old',source:'openrouter',capturedAt:'old-time'},{id:'old-aa',source:'artificial-analysis'}]};
+  const current={models:[{id:'new-aa',source:'artificial-analysis'}],sources:[{source:'openrouter',state:'error'},{source:'artificial-analysis',state:'connected'}]};
+  const result=preserveFailedSources(current,old);
+  assert.deepEqual(result.models.map(m=>m.id),['new-aa','old']);
+  assert.equal(result.models[1].capturedAt,'old-time');assert.equal(result.stale,true);
+  assert.match(result.notice,/이전 수집값/);
+  assert.equal(preserveFailedSources(current,null).models.length,1);
+  assert.doesNotMatch(preserveFailedSources(current,null).notice,/이전 수집값/);
+});
 const at='2026-10-02T07:00:00Z';
 const model={id:'openai/test',name:'OpenAI: Test',architecture:{output_modalities:['text']},pricing:{prompt:'0.000002',completion:'0.00001'},benchmarks:{artificial_analysis:{intelligence_index:51,coding_index:null}},reasoning:{supported_efforts:['low','max'],default_effort:'low'}};
 test('per-token prices convert to USD/M, null never becomes zero, no generated effort scores',()=>{

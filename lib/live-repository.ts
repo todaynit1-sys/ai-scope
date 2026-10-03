@@ -2,6 +2,7 @@ import 'server-only';
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { collectLiveData } from './sources/live-collector.mjs';
+import { preserveFailedSources } from './sources/live-fallback.mjs';
 import type { LiveSnapshot } from './live-types';
 // Route handlers and RSC pages can compile this module into separate bundles.
 // Share the process cache so a refresh also applies when navigating to another page.
@@ -30,9 +31,9 @@ export async function getLiveSnapshot(refresh=false): Promise<LiveSnapshot> {
     const keyAdded=!!process.env.ARTIFICIAL_ANALYSIS_API_KEY&&saved?.sources.some(s=>s.source==='artificial-analysis'&&s.state==='missing-key');
     if(!refresh&&!keyAdded&&saved&&Date.now()-Date.parse(saved.capturedAt)<6*60*60*1000) {cache.snapshot=saved;cache.expiresAt=Date.parse(saved.capturedAt)+6*60*60*1000;return saved;}
     const current=await collectLiveData({apiKey:process.env.ARTIFICIAL_ANALYSIS_API_KEY||'',mode:mode(),redistributionAllowed:process.env.AA_REDISTRIBUTION_ALLOWED==='true'}) as LiveSnapshot;
-    if(saved) for(const source of current.sources.filter(s=>s.state==='error')) current.models.push(...saved.models.filter(m=>m.source===source.source));
+    const previous=cache.snapshot&&(!saved||cache.snapshot.capturedAt>=saved.capturedAt)?cache.snapshot:saved;
     const failed=current.sources.some(s=>s.state==='error');
-    cache.snapshot={...current,stale:failed,notice:failed?'수집에 실패한 자료는 이전 수집값을 유지합니다. 각 행의 수집 시각을 확인하세요.':undefined};
+    cache.snapshot=preserveFailedSources(current,previous) as LiveSnapshot;
     cache.expiresAt=Date.now()+(failed?60*1000:6*60*60*1000);
     return publicFilter(cache.snapshot);
   })().finally(()=>{cache.pending=null;});
