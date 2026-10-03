@@ -3,7 +3,6 @@ import Radar from '@/components/radar';
 import { getSnapshot, availableDates } from '@/lib/repository';
 import LiveRadar from '@/components/live-radar';
 import { getLiveSnapshot, getLiveHistory } from '@/lib/live-repository';
-export const dynamic = 'force-dynamic';
 export async function generateMetadata({params}:{params:Promise<{route?:string[]}>}) {
   const {route} = await params;
   return {title: ({compare:'모델 비교',history:'변화 기록',lecture:'강의 캡처',methodology:'지표와 출처'} as Record<string,string>)[route?.[0] || ''] || '오늘의 AI 모델'};
