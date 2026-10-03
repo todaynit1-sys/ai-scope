@@ -12,7 +12,7 @@ const mode = () => process.env.DATA_MODE === 'public' ? 'public' : 'internal';
 function publicFilter(snapshot: LiveSnapshot): LiveSnapshot {
   if(mode()==='internal') return snapshot;
   const allow=process.env.AA_REDISTRIBUTION_ALLOWED==='true';
-  return {...snapshot,mode:'public',models:snapshot.models.filter(m=>allow||m.source!=='artificial-analysis').map(m=>allow?m:{...m,intelligence:null,coding:null,agentic:null}),sources:snapshot.sources.map(s=>!allow&&s.source==='artificial-analysis'?{...s,state:'restricted',count:0,message:'공개 모드에서는 성능 데이터 재배포 설정이 필요합니다.'}:s)};
+  return {...snapshot,mode:'public',models:snapshot.models.filter(m=>allow||m.source!=='artificial-analysis'),sources:snapshot.sources.map(s=>!allow&&s.source==='artificial-analysis'?{...s,state:'restricted',count:0,message:'별도 공식 API 미연결 · 성능은 OpenRouter 공개 목록 기준입니다.'}:s)};
 }
 export async function getLiveHistory(): Promise<LiveSnapshot[]> {
   try {

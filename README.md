@@ -36,7 +36,7 @@ AA_REDISTRIBUTION_ALLOWED=false
 
 키는 AA의 공식 문서에 연결된 API 키 관리 화면에서 발급합니다. 서버를 재시작한 뒤 ‘자료 갱신’을 누르거나 npm run collect:data를 실행합니다. 키는 서버에서만 x-api-key 헤더로 보내며 JSON 스냅샷·브라우저 응답에 넣지 않습니다. 환경변수 파일과 data 폴더는 Git에서 제외했습니다.
 
-DATA_MODE=public에서는 AA 공식 자료 및 OpenRouter 응답 경유 AA 점수를 기본 제외합니다. 공개 재배포 권한을 확인한 경우에만 AA_REDISTRIBUTION_ALLOWED=true를 사용합니다. 해당 플래그는 권한을 부여하지 않습니다. 현재 작업은 로컬 내부 사용이며 공개 배포하지 않았습니다.
+DATA_MODE=public에서도 OpenRouter 공개 모델 목록에 포함된 성능 지수는 출처 표시와 함께 유지합니다. 별도 AA 공식 API 자료만 기본 제외합니다. AA 공식 API의 공개 재배포 권한을 확인한 경우에만 AA_REDISTRIBUTION_ALLOWED=true를 사용합니다. 해당 플래그는 권한을 부여하지 않습니다. OpenRouter Data API의 데이터 이용·출처 기준: https://openrouter.ai/docs/cookbook/administration/data-api#license-and-citation
 
 ## 추론량과 가격을 해석하는 법
 
@@ -63,7 +63,7 @@ valueScore = 100 * (performance / maxPerformance)
 - /history: 실제로 저장된 이전 수집 시점과 가격 변화를 비교합니다. 과거 자료가 없으면 생성하지 않습니다. 평가 버전이 없거나 다르면 성능 변화를 직접 비교하지 않습니다.
 - /?date=<ISO 수집시각>: 저장된 스냅샷을 열 수 있습니다. 없는 날짜는 현재 자료와 안내문을 표시합니다.
 
-서버리스 배포의 파일시스템은 영구 저장소가 아닙니다. 저장된 파일을 함께 배포하거나 외부 영구 저장소를 연결해야 합니다. 04:00/16:00 KST 자동 수집을 원할 때 수집 명령을 외부 스케줄러에서 실행할 수 있습니다. 현재 스케줄이나 공개 배포는 활성화하지 않았습니다. 내부 AA 데이터는 공개 Git 저장소에 올리지 마세요.
+서버리스 배포의 파일시스템은 영구 저장소가 아닙니다. 저장된 파일을 함께 배포하거나 외부 영구 저장소를 연결해야 합니다. 04:00/16:00 KST 자동 수집을 원할 때 수집 명령을 외부 스케줄러에서 실행할 수 있습니다. 현재 공개 배포 주소는 https://ai-scope-sage.vercel.app 이며 자동 수집 스케줄은 활성화하지 않았습니다. 내부 AA 데이터는 공개 Git 저장소에 올리지 마세요.
 
 ## 화면과 코드
 

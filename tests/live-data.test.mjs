@@ -28,7 +28,7 @@ test('only requested creators and text models are included; variants keep separa
   const rows=parseOpenRouter({data:[model,{...model,id:'meta-llama/test'},{...model,id:'openai/test:batch'},{...model,id:'openai/image',architecture:{output_modalities:['image']}},{...model,id:'anthropic/fable'}]},at);
   assert.equal(rows.length,2);assert.notEqual(rows[0].id,rows[1].id);
 });
-test('public mode strips AA metrics from OpenRouter as well',()=>{
+test('explicit parser opt-out can suppress embedded benchmark metrics',()=>{
   assert.equal(parseOpenRouter({data:[model]},at,false)[0].intelligence,null);
 });
 const aa=(page=1,more=false)=>({intelligence_index_version:4.3,pagination:{page,has_more:more},data:[{id:`id${page}`,slug:`test-${page}`,name:`Test (${page===1?'high':'max'})`,model_creator:{name:'OpenAI'},evaluations:{artificial_analysis_intelligence_index:50+page},pricing:{price_1m_input_tokens:2,price_1m_output_tokens:10},performance:{median_output_tokens_per_second:100},artificial_analysis_intelligence_index_cost:{cost_per_task:{total_cost:0.05}}}]});
@@ -51,10 +51,10 @@ test('missing keys and upstream failures return explicit status and never mock d
   assert.equal(snapshot.models.length,0);assert.equal(snapshot.sources[0].state,'error');assert.equal(snapshot.sources[1].state,'missing-key');
   assert.throws(()=>parseOpenRouter({},at));
 });
-test('public mode does not send AA requests without redistribution permission',async()=>{
+test('public mode retains OpenRouter published scores without requesting the separate AA API',async()=>{
   const calls=[];
   const snapshot=await collectLiveData({mode:'public',apiKey:'test-secret',fetcher:async(url)=>{calls.push(url);return {ok:true,json:async()=>({data:[model]})};}});
-  assert.equal(calls.length,1);assert.equal(snapshot.models[0].intelligence,null);assert.equal(snapshot.sources[1].state,'restricted');
+  assert.equal(calls.length,1);assert.equal(snapshot.models[0].intelligence,51);assert.equal(snapshot.models[0].coding,null);assert.equal(snapshot.sources[1].state,'restricted');
 });
 test('inconsistent AA page versions discard the partial source',async()=>{
   const snapshot=await collectLiveData({apiKey:'test',fetcher:async(url)=>({ok:true,json:async()=>url.startsWith(AA_URL)?new URL(url).searchParams.get('page')==='1'?aa(1,true):{...aa(2),intelligence_index_version:4.4}:{data:[model]}})});
